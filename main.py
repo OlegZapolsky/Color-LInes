@@ -102,7 +102,6 @@ class Board:
                                 line = []
             if len(line) >= 5:
                 removed_balls += line
-
         for j in range(9):
             color = ''
             line = []
@@ -133,6 +132,38 @@ class Board:
         self.points += len(removed_balls) * (len(removed_balls) - 4)
         for i in removed_balls:
             self.board[i[1]][i[0]] = 0
+        if len(removed_balls) > 0:
+            return False
+        return True
+
+    def find_way(self, start, stop):
+        matr = self.board
+        x, y = start
+        DIST = 100
+        matr_rast = [[DIST] * 9 for _ in range(9)]
+        matr_rast[y][x] = 0
+        prev_p = [[None] * 9 for _ in range(9)]
+        queue = [(x, y)]
+        while queue and matr_rast[stop[1]][stop[0]] == DIST:
+            x, y = queue.pop(0)
+            for dx, dy in (1, 0), (0, 1), (-1, 0), (0, -1):
+                next_x, next_y = x + dx, y + dy
+                if 0 <= next_x < 9 and 0 <= next_y < 9 and matr[next_y][next_x] == 0 and matr_rast[next_y][
+                    next_x] == DIST:
+                    matr_rast[next_y][next_x] = matr_rast[y][x] + 1
+                    prev_p[next_y][next_x] = (x, y)
+                    queue.append((next_x, next_y))
+                    if (next_x, next_y) == stop:
+                        break
+        path_points = []
+        x, y = stop
+        if matr_rast[y][x] == DIST or start == stop:
+            return -1
+        else:
+            while prev_p[y][x] != start:
+                path_points.insert(0, prev_p[y][x])
+                x, y = prev_p[y][x]
+        return path_points
 
 
 def color_def(w):
@@ -209,20 +240,32 @@ def play():
                 ey = (event.pos[1] - 54) // 64
                 if not move and s[ey][ex] != 0 and event.pos[1] >= 44:
                     move = True
+                    start = (ex, ey)
                     c = s[ey][ex]
                     board.record(ex, ey, 0)
                 elif move and s[ey][ex] == 0:
-                    board.record(ex, ey, c)
-                    move = False
-                    c = 0
-                    for i in range(3):
-                        x, y = random.choice(s1)
-                        ball.draw_ball(x, y, random.choice(col))
-                board.collection_check()
+                    way = board.find_way(start, (ex, ey))
+                    if way != -1:
+                        for i in way:
+                            ball.draw_ball(i[0], i[1], (0, c))
+                            sc.fill((195, 195, 195))
+                            board.render(sc)
+                            board.draw_board()
+                            pygame.display.flip()
+                            clock.tick(30)
+                            board.record(i[0], i[1], 0)
+                        board.record(ex, ey, c)
+                        move = False
+                        c = 0
+                        if board.collection_check():
+                            for i in range(3):
+                                x, y = random.choice(s1)
+                                ball.draw_ball(x, y, random.choice(col))
         sc.fill((195, 195, 195))
         board.render(sc)
         board.draw_board()
         pygame.display.flip()
+        clock.tick(60)
 
 
 menu()
