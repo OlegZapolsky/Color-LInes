@@ -8,7 +8,7 @@ class Ball:
         self.indent = 2
 
     def draw_ball(self, x, y, c):
-        pygame.draw.ellipse(sc, c[0], (12 + x * 64, 12 + y * 64, self.r_size, self.r_size))
+        pygame.draw.ellipse(sc, c[0], (12 + x * 64, 56 + y * 64, self.r_size, self.r_size))
         board.record(x, y, c[1])
 
 
@@ -31,8 +31,9 @@ class Board:
         for y in range(self.height):
             for x in range(self.width):
                 pygame.draw.rect(screen, pygame.Color(55, 55, 55), (
-                    x * self.cell_size + self.left, y * self.cell_size + self.top, self.cell_size,
+                    x * self.cell_size + self.left, y * self.cell_size + self.top + 44, self.cell_size,
                     self.cell_size), 1)
+        pygame.draw.rect(screen, pygame.Color(55, 55, 55), (456, 10, 128, 40), 2)
 
     def record(self, x, y, c):
         self.board[y][x] = c
@@ -46,6 +47,8 @@ class Board:
             for j in range(len(self.board[i])):
                 if self.board[i][j] != 0:
                     ball.draw_ball(j, i, (color_def(str(self.board[i][j])), self.board[i][j]))
+        text = font.render(f'{self.points}', 1, (0, 0, 0))
+        sc.blit(text, (460, 16))
 
     def generate_emp_list(self):
         emp_list = []
@@ -55,6 +58,11 @@ class Board:
                 if s[i][j] == 0:
                     emp_list.append((j, i))
         return emp_list
+
+    def board_clear(self):
+        for i in range(9):
+            for j in range(9):
+                self.board[i][j] = 0
 
     def collection_check(self):
         removed_balls = []
@@ -127,41 +135,88 @@ def color_def(w):
     return n
 
 
+pygame.init()
+clock = pygame.time.Clock()
 board = Board(9, 9)
 ball = Ball(60)
 col = [((255, 0, 0), 'R'), ((0, 255, 0), 'G'), ((0, 0, 255), 'B'), ((140, 0, 255), 'P'),
        ((255, 255, 0), 'Y'), ((255, 165, 0), 'O')]
-size = width, height = 596, 596
+size = width, height = 596, 640
 sc = pygame.display.set_mode(size)
-running = True
-move = False
-sc.fill((195, 195, 195))
-for i in range(3):
-    s = board.generate_emp_list()
-    x, y = random.choice(s)
-    ball.draw_ball(x, y, random.choice(col))
-while running:
-    s = board.get_board()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            ex = (event.pos[0] - 10) // 64
-            ey = (event.pos[1] - 10) // 64
-            if not move and s[ey][ex] != 0:
-                move = True
-                c = s[ey][ex]
-                board.record(ex, ey, 0)
-            elif move and s[ey][ex] == 0:
-                board.record(ex, ey, c)
-                move = False
-                c = 0
-                for i in range(3):
-                    s = board.generate_emp_list()
-                    x, y = random.choice(s)
-                    ball.draw_ball(x, y, random.choice(col))
-            board.collection_check()
-    sc.fill((195, 195, 195))
-    board.render(sc)
-    board.draw_board()
-    pygame.display.flip()
+font_size = 52
+font = pygame.font.Font(None, font_size)
+c = [(0, 255, 0), (0, 0, 255), (140, 0, 255), (255, 255, 0), (255, 165, 0), (255, 50, 180)]
+
+
+def menu():
+    start = False
+    while not start:
+        sc.fill((0, 0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if 238 < event.pos[0] < 358 and 290 < event.pos[1] < 350:
+                    play()
+                    break
+        for i in range(10):
+            pygame.draw.circle(sc, random.choice(c), (random.randint(10, 580),
+                                                      random.randint(10, 630)), random.randint(5, 60))
+        text = font.render('START', 5, (255, 0, 0))
+        sc.blit(text, (242, 304))
+        text = font.render('Color Lines', 5, (255, 0, 0))
+        sc.blit(text, (200, 160))
+        pygame.draw.rect(sc, (255, 0, 0), (236, 290, 124, 60), 4)
+        pygame.display.flip()
+        clock.tick(12)
+
+
+def play():
+    move = False
+    running = True
+    font_size = 36
+    for i in range(3):
+        s1 = board.generate_emp_list()
+        x, y = random.choice(s1)
+        ball.draw_ball(x, y, random.choice(col))
+    while running:
+        s1 = board.generate_emp_list()
+        s = board.get_board()
+        if len(s1) < 3:
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        board.board_clear()
+                        menu()
+                        break
+                sc.fill((0, 0, 0))
+                text = font.render('GAME OVER', 10, (255, 0, 0))
+                sc.blit(text, (180, 304))
+                pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                ex = (event.pos[0] - 10) // 64
+                ey = (event.pos[1] - 54) // 64
+                if not move and s[ey][ex] != 0 and event.pos[1] >= 44:
+                    move = True
+                    c = s[ey][ex]
+                    board.record(ex, ey, 0)
+                elif move and s[ey][ex] == 0:
+                    board.record(ex, ey, c)
+                    move = False
+                    c = 0
+                    for i in range(3):
+                        x, y = random.choice(s1)
+                        ball.draw_ball(x, y, random.choice(col))
+                board.collection_check()
+        sc.fill((195, 195, 195))
+        board.render(sc)
+        board.draw_board()
+        pygame.display.flip()
+
+
+menu()
