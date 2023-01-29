@@ -1,6 +1,13 @@
 import pygame
 import random
 
+blue = pygame.image.load(r"data/blue.png")
+green = pygame.image.load(r"data/green.png")
+orange = pygame.image.load(r"data/orange.png")
+purple = pygame.image.load(r"data/purple.png")
+red = pygame.image.load(r"data/red.png")
+yellow = pygame.image.load(r"data/yellow.png")
+
 
 class Ball:
     def __init__(self, rsize):
@@ -8,7 +15,7 @@ class Ball:
         self.indent = 2
 
     def draw_ball(self, x, y, c):
-        pygame.draw.ellipse(sc, c[0], (12 + x * 64, 56 + y * 64, self.r_size, self.r_size))
+        sc.blit(color_def(c[1]), (10 + x * 64, 54 + y * 64))
         board.record(x, y, c[1])
 
 
@@ -129,8 +136,7 @@ class Board:
 
 
 def color_def(w):
-    colors = {'R': (255, 0, 0), 'G': (0, 255, 0), 'B': (0, 0, 255), 'P': (140, 0, 255),
-              'Y': (255, 255, 0), 'O': (255, 165, 0)}
+    colors = {'R': red, 'G': green, 'B': blue, 'P': purple, 'Y': yellow, 'O': orange}
     n = colors[w]
     return n
 
