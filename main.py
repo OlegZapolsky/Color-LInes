@@ -1,6 +1,7 @@
 import pygame
 import random
 
+# импорт спрайтов
 blue = pygame.image.load(r"data/blue.png")
 green = pygame.image.load(r"data/green.png")
 orange = pygame.image.load(r"data/orange.png")
@@ -9,6 +10,7 @@ red = pygame.image.load(r"data/red.png")
 yellow = pygame.image.load(r"data/yellow.png")
 
 
+# основной класс шариков
 class Ball:
     def __init__(self, rsize):
         self.r_size = rsize
@@ -19,6 +21,7 @@ class Ball:
         board.record(x, y, c[1])
 
 
+# основной класс поля
 class Board:
     def __init__(self, width, height):
         self.points = 0
@@ -34,6 +37,11 @@ class Board:
         self.top = top
         self.cell_size = cell_size
 
+    # вывод текущего счета
+    def get_points(self):
+        return self.points
+
+    # отображение ячеек
     def render(self, screen):
         for y in range(self.height):
             for x in range(self.width):
@@ -42,13 +50,16 @@ class Board:
                     self.cell_size), 1)
         pygame.draw.rect(screen, pygame.Color(55, 55, 55), (456, 10, 128, 40), 2)
 
+    # запись шарика в матрицу
     def record(self, x, y, c):
         self.board[y][x] = c
 
+    # вывод матрицы текущего положения шариков
     def get_board(self):
         s = self.board
         return s
 
+    # отрисовка шариков на поле
     def draw_board(self):
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
@@ -57,6 +68,7 @@ class Board:
         text = font.render(f'{self.points}', 1, (0, 0, 0))
         sc.blit(text, (460, 16))
 
+    # создания списка пустых ячеек
     def generate_emp_list(self):
         emp_list = []
         s = self.board
@@ -66,11 +78,14 @@ class Board:
                     emp_list.append((j, i))
         return emp_list
 
+    # очистка поля от шариков
     def board_clear(self):
         for i in range(9):
             for j in range(9):
                 self.board[i][j] = 0
+        self.points = 0
 
+    # проверка на выстроение шариков в линию
     def collection_check(self):
         removed_balls = []
         s = self.board
@@ -136,12 +151,15 @@ class Board:
             return False
         return True
 
+    # поиск кратчайшего пути для шарика
     def find_way(self, start, stop):
         matr = self.board
         x, y = start
         DIST = 100
+        # матрица расстояний от исходной точки
         matr_rast = [[DIST] * 9 for _ in range(9)]
         matr_rast[y][x] = 0
+        # матрица предыдущих положений
         prev_p = [[None] * 9 for _ in range(9)]
         queue = [(x, y)]
         while queue and matr_rast[stop[1]][stop[0]] == DIST:
@@ -166,12 +184,14 @@ class Board:
         return path_points
 
 
+# определение нужного спрайта
 def color_def(w):
     colors = {'R': red, 'G': green, 'B': blue, 'P': purple, 'Y': yellow, 'O': orange}
     n = colors[w]
     return n
 
 
+# константы
 pygame.init()
 clock = pygame.time.Clock()
 board = Board(9, 9)
@@ -185,6 +205,7 @@ font = pygame.font.Font(None, font_size)
 c = [(0, 255, 0), (0, 0, 255), (140, 0, 255), (255, 255, 0), (255, 165, 0), (255, 50, 180)]
 
 
+# меню
 def menu():
     start = False
     while not start:
@@ -196,6 +217,7 @@ def menu():
                 if 238 < event.pos[0] < 358 and 290 < event.pos[1] < 350:
                     play()
                     break
+        # анимация в меню
         for i in range(10):
             pygame.draw.circle(sc, random.choice(c), (random.randint(10, 580),
                                                       random.randint(10, 630)), random.randint(5, 60))
@@ -208,18 +230,21 @@ def menu():
         clock.tick(12)
 
 
+# игра
 def play():
     move = False
     running = True
-    font_size = 36
-    for i in range(3):
+    # появление 5 первых шариков
+    for i in range(5):
         s1 = board.generate_emp_list()
         x, y = random.choice(s1)
         ball.draw_ball(x, y, random.choice(col))
+    # игровой цикл
     while running:
         s1 = board.generate_emp_list()
         s = board.get_board()
         if len(s1) < 3:
+            # проигрыш
             while running:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -231,6 +256,8 @@ def play():
                 sc.fill((0, 0, 0))
                 text = font.render('GAME OVER', 10, (255, 0, 0))
                 sc.blit(text, (180, 304))
+                text = font.render(str(board.get_points()), 10, (255, 0, 0))
+                sc.blit(text, (260, 384))
                 pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -246,6 +273,7 @@ def play():
                 elif move and s[ey][ex] == 0:
                     way = board.find_way(start, (ex, ey))
                     if way != -1:
+                        # отображение передвижения шарика
                         for i in way:
                             ball.draw_ball(i[0], i[1], (0, c))
                             sc.fill((195, 195, 195))
@@ -258,6 +286,7 @@ def play():
                         move = False
                         c = 0
                         if board.collection_check():
+                            # появление 3 новых шариков
                             for i in range(3):
                                 x, y = random.choice(s1)
                                 ball.draw_ball(x, y, random.choice(col))
