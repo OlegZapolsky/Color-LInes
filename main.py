@@ -212,10 +212,11 @@ def menu():
         sc.fill((0, 0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                exit()
+                start = True
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if 238 < event.pos[0] < 358 and 290 < event.pos[1] < 350:
                     play()
+                    start = True
                     break
         # анимация в меню
         for i in range(10):
@@ -248,7 +249,7 @@ def play():
             while running:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        exit()
+                        running = False
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         board.board_clear()
                         menu()
@@ -261,7 +262,7 @@ def play():
                 pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                exit()
+                running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 ex = (event.pos[0] - 10) // 64
                 ey = (event.pos[1] - 54) // 64
